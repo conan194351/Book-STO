@@ -13,7 +13,6 @@ func Index() http.Handler {
 	//REST API routes book
 	routes.HandleFunc("/api/book/showall", service.IndexBook).Methods("GET")
 	routes.HandleFunc("/api/book/create", service.CreateBook).Methods("POST")
-	routes.HandleFunc("/api/book/{id}", service.Show).Methods("GET")
 	routes.HandleFunc("/api/book/search-by-author", service.SearchBookByAuthor).Methods("POSt")
 	routes.HandleFunc("/api/book/search-by-categories", service.SearchBookByCate).Methods("POSt")
 

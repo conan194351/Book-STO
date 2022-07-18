@@ -1,7 +1,6 @@
 package service
 
 import (
-	"book-sto/config"
 	"book-sto/model"
 	"encoding/json"
 	"io/ioutil"
@@ -13,7 +12,6 @@ import (
 type Categories model.Categories
 
 func IndexCate(response http.ResponseWriter, request *http.Request) {
-	db := config.DbConn()
 	selDB, err := db.Query("SELECT * FROM longphu.categories ")
 	if err != nil {
 		json.NewEncoder(response).Encode(ResponseWriter(err))
@@ -36,7 +34,6 @@ func IndexCate(response http.ResponseWriter, request *http.Request) {
 }
 
 func CreateCate(response http.ResponseWriter, request *http.Request) {
-	db := config.DbConn()
 	var categories Categories
 	if err := json.NewDecoder(request.Body).Decode(&categories); err != nil {
 		json.NewEncoder(response).Encode(ResponseWriter(err))
@@ -54,7 +51,6 @@ func CreateCate(response http.ResponseWriter, request *http.Request) {
 }
 
 func SearchCate(response http.ResponseWriter, request *http.Request) {
-	db := config.DbConn()
 	body, err := ioutil.ReadAll(request.Body)
 	bodyString := "%" + string(body) + "%"
 	selDB, err := db.Query("SELECT categories.The_loai FROM longphu.categories as categories WHERE categories.The_loai LIKE ?", bodyString)

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"book-sto/config"
 	"book-sto/model"
 	"encoding/json"
 	"io/ioutil"
@@ -14,8 +13,6 @@ type Author = model.Author
 
 type ret map[string]string
 
-//var tmpl = template.Must(template.ParseGlob("form/*"))
-
 func ResponseWriter(err error) map[string]string {
 	ret := make(map[string]string)
 	ret["status"] = "400"
@@ -24,7 +21,6 @@ func ResponseWriter(err error) map[string]string {
 }
 
 func IndexAuthor(response http.ResponseWriter, request *http.Request) {
-	db := config.DbConn()
 	selDB, err := db.Query("SELECT idAuthor,ten_tg, QueQuan FROM author")
 	if err != nil {
 		json.NewEncoder(response).Encode(ResponseWriter(err))
@@ -50,7 +46,6 @@ func IndexAuthor(response http.ResponseWriter, request *http.Request) {
 }
 
 func SearchAuthor(response http.ResponseWriter, request *http.Request) {
-	db := config.DbConn()
 	body, err := ioutil.ReadAll(request.Body)
 	bodyString := "%" + string(body) + "%"
 	selDB, err := db.Query("SELECT author.ten_tg, author.QueQuan FROM longphu.author as author WHERE author.ten_tg LIKE ?", bodyString)
@@ -75,7 +70,6 @@ func SearchAuthor(response http.ResponseWriter, request *http.Request) {
 }
 
 func CreateAuthor(response http.ResponseWriter, request *http.Request) {
-	db := config.DbConn()
 	var author Author
 	if err := json.NewDecoder(request.Body).Decode(&author); err != nil {
 		json.NewEncoder(response).Encode(ResponseWriter(err))
