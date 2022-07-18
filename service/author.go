@@ -47,6 +47,9 @@ func IndexAuthor(response http.ResponseWriter, request *http.Request) {
 
 func SearchAuthor(response http.ResponseWriter, request *http.Request) {
 	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		json.NewEncoder(response).Encode(ResponseWriter(err))
+	}
 	bodyString := "%" + string(body) + "%"
 	selDB, err := db.Query("SELECT author.ten_tg, author.QueQuan FROM longphu.author as author WHERE author.ten_tg LIKE ?", bodyString)
 	if err != nil {
