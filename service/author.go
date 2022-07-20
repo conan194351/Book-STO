@@ -1,96 +1,61 @@
 package service
 
 import (
+	"book-sto/dto"
+	"book-sto/errs"
 	"book-sto/model"
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
-
-	_ "github.com/go-sql-driver/mysql"
+	"book-sto/repository"
 )
 
-type Author = model.Author
-
-type ret map[string]string
-
-func ResponseWriter(err error, status string) map[string]string {
-	ret := make(map[string]string)
-	ret["status"] = status
-	ret[err.Error()] = err.Error()
-	return ret
+type AuthorServices interface {
+	ListAuthor() (*dto.GetAllAuthorResponse, *errs.AppError)
+	CreateAuthor(req dto.CreateAutherRequest) (*dto.CreateAuthorResponse, *errs.AppError)
+	SearchAuthor(req dto.SearchAuthorRequest) (*dto.SearchAuthorResponse, *errs.AppError)
 }
 
-func IndexAuthor(response http.ResponseWriter, request *http.Request) {
-	selDB, err := db.Query("SELECT idAuthor,ten_tg, QueQuan FROM author")
+type DefaultAuthorServices struct {
+	repo repository.AuthorRepository
+}
+
+func NewAuthorServices(repo repository.AuthorRepository) AuthorServices {
+
+	return DefaultAuthorServices{
+
+		repo: repo,
+	}
+}
+
+func (a DefaultAuthorServices) ListAuthor() (*dto.GetAllAuthorResponse, *errs.AppError) {
+
+	authors, err := a.repo.List()
 	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
+
+		return nil, err
 	}
-	defer selDB.Close()
-	author := Author{}
-	res := []Author{}
-	for selDB.Next() {
-		var idAuthor int
-		var ten_tg string
-		var QueQuan string
-		err = selDB.Scan(&idAuthor, &ten_tg, &QueQuan)
-		if err != nil {
-			json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-			return
-		}
-		author.IdAuthor = idAuthor
-		author.Ten_tg = ten_tg
-		author.QueQuan = QueQuan
-		res = append(res, author)
+	return &dto.GetAllAuthorResponse{Authors: authors}, nil
+}
+
+func (a DefaultAuthorServices) CreateAuthor(req dto.CreateAutherRequest) (*dto.CreateAuthorResponse, *errs.AppError) {
+	author := model.Author{
+		Name:       req.Name,
+		NativeLand: req.NativeLand,
 	}
-	json.NewEncoder(response).Encode(res)
+	newAthor, err := a.repo.Create(author)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.CreateAuthorResponse{Author: newAthor}, nil
 
 }
 
-func SearchAuthor(response http.ResponseWriter, request *http.Request) {
-	body, err := ioutil.ReadAll(request.Body)
-	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-	}
-	bodyString := "%" + string(body) + "%"
-	selDB, err := db.Query("SELECT author.ten_tg, author.QueQuan FROM longphu.author as author WHERE author.ten_tg LIKE ?", bodyString)
-	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-		return
-	}
-	defer selDB.Close()
-	author := Author{}
-	res := []Author{}
-	for selDB.Next() {
-		var ten_tg string
-		var QueQuan string
-		err = selDB.Scan(&ten_tg, &QueQuan)
-		if err != nil {
-			json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-			return
-		}
-		author.Ten_tg = ten_tg
-		author.QueQuan = QueQuan
-		res = append(res, author)
-	}
-	json.NewEncoder(response).Encode(res)
-}
+func (a DefaultAuthorServices) SearchAuthor(req dto.SearchAuthorRequest) (*dto.SearchAuthorResponse, *errs.AppError) {
+	Name := req.Name
+	res, e := a.repo.SearchAuthor(Name)
+	if e != nil {
 
-func CreateAuthor(response http.ResponseWriter, request *http.Request) {
-	var author Author
-	if err := json.NewDecoder(request.Body).Decode(&author); err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-		return
+		return nil, e
 	}
-	queQuan := string(author.QueQuan)
-	ten_tg := string(author.Ten_tg)
 
-	selDB, err := db.Prepare("INSERT INTO longphu.author(ten_tg, QueQuan) VALUES (? ,?) ")
-	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-		return
-	}
-	selDB.Exec(ten_tg, queQuan)
-	defer selDB.Close()
-	res := "INSERT: ten tac gia: " + ten_tg + " | Que quan: " + queQuan
-	json.NewEncoder(response).Encode(res)
+	return &dto.SearchAuthorResponse{Authors: res}, nil
+
 }

@@ -6,7 +6,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func DbConn() *sql.DB {
+var DB *sql.DB
+
+func getDatabase() *sql.DB {
 	dbDriver := "mysql"
 	dbUser := "root"
 	dbPass := "root"
@@ -16,4 +18,8 @@ func DbConn() *sql.DB {
 		panic(err.Error())
 	}
 	return db
+}
+
+func InitDatabase() {
+	DB = getDatabase()
 }

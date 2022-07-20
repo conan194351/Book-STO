@@ -1,166 +1,65 @@
 package service
 
 import (
-	"book-sto/config"
+	"book-sto/dto"
+	"book-sto/errs"
 	"book-sto/model"
-	"database/sql"
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"strings"
-
-	_ "github.com/go-sql-driver/mysql"
+	"book-sto/repository"
 )
 
-type Book model.Book
-
-var db = config.DbConn()
-
-func IndexBook(response http.ResponseWriter, request *http.Request) {
-	selDB, err := db.Query("SELECT book.idBook,book.Ten_sach FROM longphu.book as book")
-	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "500"))
-		return
-	}
-	defer selDB.Close()
-	book := Book{}
-	res := []Book{}
-	for selDB.Next() {
-		var idBook int
-		var ten_sach string
-		err = selDB.Scan(&idBook, &ten_sach)
-		if err != nil {
-			json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-			return
-		}
-		book.IdBook = idBook
-		book.Ten_sach = ten_sach
-		res = append(res, book)
-	}
-	json.NewEncoder(response).Encode(res)
+type BookService interface {
+	IndexBook() (*dto.GetAllBookResponse, *errs.AppError)
+	CreateBook(req dto.CreateBookRequest) (*dto.CreateBookResponse, *errs.AppError)
+	SearchBookByAuthor(req dto.SearchBookByAuthorRequest) (*dto.SearchBookByAuthorResponse, *errs.AppError)
+	SearchBookByCategory(req dto.SearchBookByCategoryRequest) (*dto.SearchBookByCategoryResponse, *errs.AppError)
 }
 
-func CreateBook(response http.ResponseWriter, request *http.Request) {
-	var book Book
-	if err := json.NewDecoder(request.Body).Decode(&book); err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "500"))
-		return
-	}
-	ten_sach := string(book.Ten_sach)
-	tac_gia := string(book.Ten_tg)
-	cate := string(book.Cate)
-	var idBook int
-
-	selDB, err := db.Prepare("INSERT INTO longphu.book(Ten_sach) VALUES (?) ")
-	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-		return
-	}
-
-	selDB.Exec(ten_sach)
-
-	err1 := db.QueryRow("SELECT book.idBook FROM longphu.book as book WHERE book.Ten_sach = ?", ten_sach).Scan(&idBook)
-	if err1 != nil || err1 == sql.ErrNoRows {
-		json.NewEncoder(response).Encode(ResponseWriter(err1, "400"))
-		return
-	}
-
-	author := strings.Split(tac_gia, "; ")
-
-	for i := 0; i < len(author); i++ {
-		var idAuthor int
-		err1 := db.QueryRow("SELECT author.idAuthor FROM longphu.author as author WHERE author.ten_tg = ?", author[i]).Scan(&idAuthor)
-		if err1 != nil || err1 == sql.ErrNoRows {
-			json.NewEncoder(response).Encode(ResponseWriter(err1, "400"))
-			return
-		}
-
-		selDB1, err := db.Prepare("INSERT INTO longphu.book_author (idAuthor, idBook) VALUES (?, ?) ")
-		if err != nil {
-			json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-			return
-		}
-		selDB1.Exec(idAuthor, idBook)
-	}
-
-	categories := strings.Split(cate, "; ")
-	for i := 0; i < len(author); i++ {
-		var idCategories int
-		err1 := db.QueryRow("SELECT categories.idCategories FROM longphu.categories as categories WHERE categories.The_loai = ?", categories[i]).Scan(&idCategories)
-		if err1 != nil || err1 == sql.ErrNoRows {
-			json.NewEncoder(response).Encode(ResponseWriter(err1, "400"))
-			return
-		}
-
-		selDB1, err := db.Prepare("INSERT INTO longphu.book_categories (idCategories, idBook) VALUES (?, ?) ")
-		if err != nil {
-			json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-			return
-		}
-		selDB1.Exec(idCategories, idBook)
-	}
-
-	defer selDB.Close()
-	res := "INSERT: Ten sach: " + ten_sach + " | Tac gia: " + tac_gia + " | The loai: " + cate
-	json.NewEncoder(response).Encode(res)
+type DefaultBookService struct {
+	repo repository.BookRepository
 }
 
-func SearchBookByCate(response http.ResponseWriter, request *http.Request) {
-	body, err := ioutil.ReadAll(request.Body)
-	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "500"))
-		return
+func NewBookServices(repo repository.BookRepository) BookService {
+	return DefaultBookService{
+
+		repo: repo,
 	}
-	bodyString := "%" + string(body) + "%"
-	selDB, err := db.Query("SELECT book.Ten_sach, categories.The_loai FROM longphu.book as book,  longphu.categories as categories, longphu.book_categories as bc WHERE book.idBook = bc.idBook AND bc.idCategories = categories.idCategories AND categories.The_loai LIKE ?", bodyString)
-	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-		return
-	}
-	defer selDB.Close()
-	book := Book{}
-	res := []Book{}
-	for selDB.Next() {
-		var Ten_sach string
-		var The_loai string
-		err = selDB.Scan(&Ten_sach, &The_loai)
-		if err != nil {
-			json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-			return
-		}
-		book.Ten_sach = Ten_sach
-		book.Cate = The_loai
-		res = append(res, book)
-	}
-	json.NewEncoder(response).Encode(res)
 }
 
-func SearchBookByAuthor(response http.ResponseWriter, request *http.Request) {
-	body, err := ioutil.ReadAll(request.Body)
+func (a DefaultBookService) IndexBook() (*dto.GetAllBookResponse, *errs.AppError) {
+	books, err := a.repo.IndexBook()
 	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "500"))
-		return
+
+		return nil, err
 	}
-	bodyString := "%" + string(body) + "%"
-	selDB, err := db.Query("SELECT book.Ten_sach, author.Ten_Tg FROM longphu.book as book,  longphu.author as author, longphu.book_author as ba WHERE book.idBook = ba.idBook AND ba.idAuthor = author.idAuthor AND author.Ten_Tg LIKE ?", bodyString)
+	return &dto.GetAllBookResponse{Books: books}, nil
+}
+
+func (a DefaultBookService) CreateBook(req dto.CreateBookRequest) (*dto.CreateBookResponse, *errs.AppError) {
+	book := model.Book{
+		Name:         req.Name,
+		NameOfAuthor: req.NameOfAuthor,
+		Category:     req.Category,
+	}
+	newBook, err := a.repo.CreateBook(book)
 	if err != nil {
-		json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-		return
+		return nil, err
 	}
-	defer selDB.Close()
-	book := Book{}
-	res := []Book{}
-	for selDB.Next() {
-		var Ten_sach string
-		var Ten_tg string
-		err = selDB.Scan(&Ten_sach, &Ten_tg)
-		if err != nil {
-			json.NewEncoder(response).Encode(ResponseWriter(err, "400"))
-			return
-		}
-		book.Ten_sach = Ten_sach
-		book.Ten_tg = Ten_tg
-		res = append(res, book)
+	return &dto.CreateBookResponse{Book: newBook}, nil
+}
+
+func (a DefaultBookService) SearchBookByAuthor(req dto.SearchBookByAuthorRequest) (*dto.SearchBookByAuthorResponse, *errs.AppError) {
+	Name := req.NameOfAuthor
+	res, err := a.repo.SearchBookByAuthor(Name)
+	if err != nil {
+		return nil, err
 	}
-	json.NewEncoder(response).Encode(res)
+	return &dto.SearchBookByAuthorResponse{Books: res}, nil
+}
+func (a DefaultBookService) SearchBookByCategory(req dto.SearchBookByCategoryRequest) (*dto.SearchBookByCategoryResponse, *errs.AppError) {
+	Category := req.Category
+	res, err := a.repo.SearchBookByCategory(Category)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.SearchBookByCategoryResponse{Books: res}, nil
 }

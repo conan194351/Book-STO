@@ -1,7 +1,7 @@
 package model
 
 type Author struct {
-	IdAuthor int    `json:"_id,omitempty"`
-	Ten_tg   string `json:"ten_tg,omitempty"`
-	QueQuan  string `json:"QueQuan,omitempty"`
+	IdAuthor   int    `json:"idAuthor,omitempty"`
+	Name       string `json:"name,omitempty"`
+	NativeLand string `json:"NativeLand,omitempty"`
 }
