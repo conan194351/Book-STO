@@ -15,6 +15,6 @@ func RunApp() {
 	routes.AuthorRoute(router)
 	routes.CategoryRoute(router)
 
-	log.Println("Server is running on PORT ", config.PORT)
-	router.Run(config.PORT)
+	log.Println("Server is running on PORT ", config.ConnectPort())
+	router.Run(config.ConnectPort())
 }
