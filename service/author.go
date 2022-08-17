@@ -8,9 +8,11 @@ import (
 )
 
 type AuthorServices interface {
+	LoginAuthor(req dto.LoginAuthorRequest) (*dto.LoginAuthorResponse, *errs.AppError)
 	ListAuthor() (*dto.GetAllAuthorResponse, *errs.AppError)
 	CreateAuthor(req dto.CreateAutherRequest) (*dto.CreateAuthorResponse, *errs.AppError)
 	SearchAuthor(req dto.SearchAuthorRequest) (*dto.SearchAuthorResponse, *errs.AppError)
+	ShowBookByAuthor(req string) (*dto.ShowBookByAuthorResponse, *errs.AppError)
 }
 
 type DefaultAuthorServices struct {
@@ -23,6 +25,27 @@ func NewAuthorServices(repo repository.AuthorRepository) AuthorServices {
 
 		repo: repo,
 	}
+}
+
+func (a DefaultAuthorServices) LoginAuthor(req dto.LoginAuthorRequest) (*dto.LoginAuthorResponse, *errs.AppError) {
+	author := dto.LoginAuthorRequest{
+		Username: req.Username,
+		Password: req.Password,
+	}
+	response, err := a.repo.Login(author)
+	if err != nil {
+		return &dto.LoginAuthorResponse{Status: response.Status, Username: response.Username, Token: response.Token, ExpireAt: response.ExpireAt}, err
+	}
+	return &dto.LoginAuthorResponse{Status: response.Status, Username: response.Username, Token: response.Token, ExpireAt: response.ExpireAt}, nil
+}
+
+func (a DefaultAuthorServices) ShowBookByAuthor(req string) (*dto.ShowBookByAuthorResponse, *errs.AppError) {
+	username := req
+	res, err := a.repo.ShowBookByAuthor(username)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.ShowBookByAuthorResponse{Books: res}, nil
 }
 
 func (a DefaultAuthorServices) ListAuthor() (*dto.GetAllAuthorResponse, *errs.AppError) {

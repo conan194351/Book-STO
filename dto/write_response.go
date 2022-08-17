@@ -31,3 +31,24 @@ func CheckID(id int) *errs.AppError {
 
 	return nil
 }
+
+func LoginSuccess(obj string) *Message {
+	return &Message{
+
+		Message: "Login " + obj + " Success!!!",
+	}
+}
+
+func LoginFalse() *Message {
+	return &Message{
+
+		Message: "Login failed",
+	}
+}
+
+func NotPermissions() *Message {
+	return &Message{
+
+		Message: "You have no permissions",
+	}
+}

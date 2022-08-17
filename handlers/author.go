@@ -4,7 +4,9 @@ import (
 	"book-sto/dto"
 	"book-sto/errs"
 	"book-sto/service"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +20,37 @@ func NewAuthorHandler(services service.AuthorServices) AuthorHandler {
 	return AuthorHandler{
 
 		services: services,
+	}
+}
+
+func (a AuthorHandler) LoginAuthor() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var author dto.LoginAuthorRequest
+		err := ctx.BindJSON(&author)
+
+		if err != nil {
+
+			WriteError(ctx, errs.ErrorReadRequestBody())
+			return
+		}
+		response, e := a.services.LoginAuthor(author)
+		if err != nil {
+
+			WriteError(ctx, e)
+			return
+		}
+		if response.Status == "Success" {
+			WriteRespon(ctx, http.StatusOK, dto.LoginSuccess("author"))
+			http.SetCookie(ctx.Writer, &http.Cookie{
+				Name:    "token",
+				Value:   response.Token,
+				Expires: time.Now().Add(30 * 24 * time.Hour),
+			})
+			fmt.Println(response.Token)
+
+		} else {
+			WriteRespon(ctx, http.StatusOK, dto.LoginFalse())
+		}
 	}
 }
 
@@ -66,6 +99,20 @@ func (a AuthorHandler) SearchAuthor() gin.HandlerFunc {
 			return
 		}
 		res, e := a.services.SearchAuthor(author)
+		if e != nil {
+
+			WriteError(ctx, e)
+			return
+		}
+
+		WriteRespon(ctx, http.StatusOK, res)
+	}
+}
+
+func (a AuthorHandler) ShowBookByAuthor() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		user := ctx.MustGet("user").(string)
+		res, e := a.services.ShowBookByAuthor(user)
 		if e != nil {
 
 			WriteError(ctx, e)

@@ -61,6 +61,20 @@ func RequestTimeoutError(mess string) *AppError {
 	}
 }
 
+func NewUnexpectedError(message string) *AppError {
+	return &AppError{
+		Message: message,
+		Code:    http.StatusInternalServerError,
+	}
+}
+
+func NewUnauthenticatedError(message string) *AppError {
+	return &AppError{
+		Message: message,
+		Code:    http.StatusUnauthorized,
+	}
+}
+
 func IsError(errors ...*AppError) *AppError {
 
 	for i := 0; i < len(errors); i++ {
