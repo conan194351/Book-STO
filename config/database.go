@@ -12,7 +12,7 @@ import (
 var DB *sql.DB
 
 func getDatabase() *sql.DB {
-	err := godotenv.Load("./.env")
+	err := godotenv.Load("././.env")
 	if err != nil {
 		fmt.Printf("Error loading .env file")
 	}

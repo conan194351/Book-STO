@@ -10,6 +10,10 @@ type CreateAuthorResponse struct {
 	Author model.Author
 }
 
+type FindBookByIdAuthor struct {
+	Book []model.Book
+}
+
 type CreateAutherRequest struct {
 	Name       string `json:"Name"`
 	NativeLand string `json:"NativeLand"`
