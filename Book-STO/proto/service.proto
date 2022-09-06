@@ -1,0 +1,21 @@
+syntax = "proto3";
+package proto;
+option go_package = "./service1";
+
+message FindBookByIdAuthorRequest {
+    int64 idAuthor = 1;
+}
+
+message FindBookByIdAuthorResponse {
+    int64 idBook = 1;
+    string nameBook = 2;
+    string categoryBook = 3;
+}
+
+message BooksResponse {
+	repeated FindBookByIdAuthorResponse books_response = 1;
+}
+
+service AddAuthorService {
+    rpc FindBookByIdAuthor (FindBookByIdAuthorRequest) returns (BooksResponse);
+}
