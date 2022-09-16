@@ -15,6 +15,10 @@ func BookRoute(router *gin.Engine) {
 	route := router.Group("/api/book")
 	{
 		route.GET("/", handler.IndexBook())
+		route.GET("/test", func(ctx *gin.Context) {
+			ctx.JSON(200, "test success")
+
+		})
 		route.POST("/create", handler.CreateBook())
 		route.POST("/search-by-author", handler.SearchBookByAuthor())
 		route.POST("/search-by-category", handler.SearchBookByCategory())
