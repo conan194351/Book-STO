@@ -5,10 +5,8 @@ import (
 	"book-sto/errs"
 	"book-sto/proto"
 	"book-sto/service"
-	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
@@ -21,39 +19,7 @@ type AuthorHandler struct {
 func NewAuthorHandler(services service.AuthorServices) AuthorHandler {
 
 	return AuthorHandler{
-
 		services: services,
-	}
-}
-
-func (a AuthorHandler) LoginAuthor() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var author dto.LoginAuthorRequest
-		err := ctx.BindJSON(&author)
-
-		if err != nil {
-
-			WriteError(ctx, errs.ErrorReadRequestBody())
-			return
-		}
-		response, e := a.services.LoginAuthor(author)
-		if err != nil {
-
-			WriteError(ctx, e)
-			return
-		}
-		if response.Status == "Success" {
-			WriteRespon(ctx, http.StatusOK, dto.LoginSuccess("author"))
-			http.SetCookie(ctx.Writer, &http.Cookie{
-				Name:    "token",
-				Value:   response.Token,
-				Expires: time.Now().Add(30 * 24 * time.Hour),
-			})
-			fmt.Println(response.Token)
-
-		} else {
-			WriteRespon(ctx, http.StatusOK, dto.LoginFalse())
-		}
 	}
 }
 
@@ -129,7 +95,7 @@ func (a AuthorHandler) ShowBookByAuthor() gin.HandlerFunc {
 func FindBookByIdAuthor(conn *grpc.ClientConn) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		client := proto.NewAddAuthorServiceClient(conn)
-		a, err := strconv.ParseUint(ctx.Param("a"), 10, 64)
+		a, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Parameter A"})
 			return

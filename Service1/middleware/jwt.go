@@ -1,19 +1,20 @@
 package middlewares
 
 import (
-	"book-sto/config"
-	"book-sto/dto"
-	"book-sto/errs"
-	"book-sto/handlers"
-	"book-sto/repository"
+	"fmt"
 	"net/http"
+	"service1/config"
+	"service1/dto"
+	"service1/errs"
+	"service1/handlers"
+	"service1/repository"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 type JWTMiddleware struct {
-	repo repository.AuthorRepository
+	repo repository.AuthService1Repo
 }
 
 func (m JWTMiddleware) Verify() gin.HandlerFunc {
@@ -28,6 +29,7 @@ func (m JWTMiddleware) Verify() gin.HandlerFunc {
 			return
 		}
 		token := arr[1]
+		fmt.Printf(token)
 		claims, err := config.VerifyJWTToken(token)
 		if err != nil {
 			handlers.WriteError(c, err)
@@ -49,7 +51,7 @@ func (m JWTMiddleware) Verify() gin.HandlerFunc {
 	}
 }
 
-func NewJWTMiddleware(repo repository.AuthorRepository) JWTMiddleware {
+func NewJWTMiddleware(repo repository.AuthService1Repo) JWTMiddleware {
 	return JWTMiddleware{
 		repo: repo,
 	}

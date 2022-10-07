@@ -1,6 +1,6 @@
 package dto
 
-import "book-sto/errs"
+import "service1/errs"
 
 type Message struct {
 	Message string `json:"message"`

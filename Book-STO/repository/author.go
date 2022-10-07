@@ -1,20 +1,15 @@
 package repository
 
 import (
-	"book-sto/config"
-	"book-sto/dto"
 	"book-sto/errs"
 	"book-sto/model"
 	"database/sql"
-
-	"github.com/golang-jwt/jwt"
 )
 
 type AuthorRepository interface {
 	List() ([]model.Author, *errs.AppError)
 	Create(model.Author) (model.Author, *errs.AppError)
 	SearchAuthor(req string) ([]model.Author, *errs.AppError)
-	Login(dto.LoginAuthorRequest) (dto.LoginAuthorResponse, *errs.AppError)
 	FindAuthorByUsername(username string) (string, *errs.AppError)
 	ShowBookByAuthor(req string) ([]model.Book, *errs.AppError)
 }
@@ -29,40 +24,6 @@ func NewAuthorRepository(db *sql.DB) AuthorRepository {
 
 		db: db,
 	}
-}
-
-func (a DefaultAuthorRepository) Login(req dto.LoginAuthorRequest) (dto.LoginAuthorResponse, *errs.AppError) {
-	author := model.Author{
-		Username: req.Username,
-		Password: req.Password,
-	}
-	var username string
-	var response dto.LoginAuthorResponse
-	res, err := a.db.Query("select author.username from longphu.author as author where author.username = ? and author.password = ?", author.Username, author.Password)
-	for res.Next() {
-		err = res.Scan(&username)
-		if err != nil {
-			response.Status = "False"
-			return response, errs.ErrorReadData()
-		}
-	}
-	response.Status = "False"
-	if username != "" {
-		jwtToken, token, e := config.NewJWTToken(username)
-		if e != nil {
-			return response, e
-		}
-		claims := jwtToken.Claims.(jwt.MapClaims)
-		expiredAt := claims["exp"].(int64)
-		res := dto.LoginAuthorResponse{
-			Status:   "Success",
-			Username: username,
-			Token:    *token,
-			ExpireAt: expiredAt,
-		}
-		return res, nil
-	}
-	return response, nil
 }
 
 func (a DefaultAuthorRepository) FindAuthorByUsername(username string) (string, *errs.AppError) {

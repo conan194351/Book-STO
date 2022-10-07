@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AddAuthorServiceClient interface {
 	FindBookByIdAuthor(ctx context.Context, in *FindBookByIdAuthorRequest, opts ...grpc.CallOption) (*BooksResponse, error)
+	LoginGPRC(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 }
 
 type addAuthorServiceClient struct {
@@ -42,12 +43,21 @@ func (c *addAuthorServiceClient) FindBookByIdAuthor(ctx context.Context, in *Fin
 	return out, nil
 }
 
+func (c *addAuthorServiceClient) LoginGPRC(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, "/proto.AddAuthorService/LoginGPRC", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AddAuthorServiceServer is the server API for AddAuthorService service.
 // All implementations must embed UnimplementedAddAuthorServiceServer
 // for forward compatibility
 type AddAuthorServiceServer interface {
 	FindBookByIdAuthor(context.Context, *FindBookByIdAuthorRequest) (*BooksResponse, error)
-	//mustEmbedUnimplementedAddAuthorServiceServer()
+	LoginGPRC(context.Context, *LoginRequest) (*LoginResponse, error)
 }
 
 // UnimplementedAddAuthorServiceServer must be embedded to have forward compatible implementations.
@@ -56,6 +66,9 @@ type UnimplementedAddAuthorServiceServer struct {
 
 func (UnimplementedAddAuthorServiceServer) FindBookByIdAuthor(context.Context, *FindBookByIdAuthorRequest) (*BooksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindBookByIdAuthor not implemented")
+}
+func (UnimplementedAddAuthorServiceServer) LoginGPRC(context.Context, *LoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LoginGPRC not implemented")
 }
 func (UnimplementedAddAuthorServiceServer) mustEmbedUnimplementedAddAuthorServiceServer() {}
 
@@ -88,6 +101,24 @@ func _AddAuthorService_FindBookByIdAuthor_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AddAuthorService_LoginGPRC_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AddAuthorServiceServer).LoginGPRC(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.AddAuthorService/LoginGPRC",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AddAuthorServiceServer).LoginGPRC(ctx, req.(*LoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AddAuthorService_ServiceDesc is the grpc.ServiceDesc for AddAuthorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +129,10 @@ var AddAuthorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FindBookByIdAuthor",
 			Handler:    _AddAuthorService_FindBookByIdAuthor_Handler,
+		},
+		{
+			MethodName: "LoginGPRC",
+			Handler:    _AddAuthorService_LoginGPRC_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

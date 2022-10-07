@@ -20,7 +20,6 @@ func AuthorRoute(router *gin.Engine) {
 		route.GET("/", handler.GetListAuthor())
 		route.POST("/create", handler.CreateAuthor())
 		route.POST("/search", handler.SearchAuthor())
-		route.POST("/login", handler.LoginAuthor())
 		route.GET("/show", jwtMiddleware.Verify(), handler.ShowBookByAuthor())
 	}
 }
