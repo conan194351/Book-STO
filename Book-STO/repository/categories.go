@@ -4,6 +4,8 @@ import (
 	"book-sto/errs"
 	"book-sto/model"
 	"database/sql"
+
+	"github.com/go-redis/redis"
 )
 
 type CategoryRepository interface {
@@ -13,12 +15,12 @@ type CategoryRepository interface {
 }
 
 type DefaultCategoryRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	redis *redis.Client
 }
 
 func NewCategoryRepository(db *sql.DB) CategoryRepository {
 	return DefaultCategoryRepository{
-
 		db: db,
 	}
 }

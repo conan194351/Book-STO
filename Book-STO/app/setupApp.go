@@ -2,6 +2,7 @@ package app
 
 import (
 	"book-sto/config"
+	"book-sto/redis"
 	"book-sto/routes"
 	"log"
 
@@ -16,11 +17,14 @@ func RunApp() {
 	}
 
 	config.InitDatabase()
+	redis.NewResdisClient()
 	router := gin.Default()
 	routes.Service(router, conn)
 	routes.BookRoute(router)
 	routes.AuthorRoute(router)
 	routes.CategoryRoute(router)
+	routes.AuthRoute(router)
+
 	log.Println("Server is running on PORT ", ":8080")
 	router.Run(":8080")
 }

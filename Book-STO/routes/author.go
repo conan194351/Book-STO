@@ -4,6 +4,7 @@ import (
 	"book-sto/config"
 	"book-sto/handlers"
 	"book-sto/middlewares"
+	"book-sto/redis"
 	"book-sto/repository"
 	"book-sto/service"
 
@@ -13,7 +14,7 @@ import (
 func AuthorRoute(router *gin.Engine) {
 
 	handler := handlers.NewAuthorHandler(service.NewAuthorServices(repository.NewAuthorRepository(config.DB)))
-	jwtMiddleware := middlewares.NewJWTMiddleware(repository.NewAuthorRepository(config.DB))
+	jwtMiddleware := middlewares.NewJWTMiddleware(repository.NewAuthorRepository(config.DB), redis.RDB)
 	route := router.Group("/api/author")
 	{
 

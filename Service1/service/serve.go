@@ -5,6 +5,7 @@ import (
 	"net"
 	"service1/config"
 	"service1/proto"
+	"service1/redis"
 	"service1/repository"
 
 	"google.golang.org/grpc"
@@ -13,7 +14,7 @@ import (
 
 func StartService(listener net.Listener) {
 	srv := grpc.NewServer()
-	var server = NewService(repository.NewAuthService1Repo(config.DB))
+	var server = NewService(repository.NewAuthService1Repo(config.DB, redis.RDB))
 	proto.RegisterAddAuthorServiceServer(srv, server)
 	reflection.Register(srv)
 

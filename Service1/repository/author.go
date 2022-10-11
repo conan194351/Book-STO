@@ -7,6 +7,7 @@ import (
 	"service1/errs"
 	"service1/proto"
 
+	"github.com/go-redis/redis"
 	"github.com/golang-jwt/jwt"
 	"gorm.io/gorm"
 )
@@ -15,15 +16,18 @@ type AuthService1Repo interface {
 	LoginGRPC(request *proto.LoginRequest) (*proto.LoginResponse, error)
 	FindBookByIdAuthor(request *proto.FindBookByIdAuthorRequest) ([]*proto.FindBookByIdAuthorResponse, error)
 	FindAuthorByUsername(username string) (string, *errs.AppError)
+	Logout(request *proto.LogoutRequest) (*proto.LogoutResponse, error)
 }
 
 type DefaultAuthService1Repo struct {
-	db *gorm.DB
+	db    *gorm.DB
+	redis *redis.Client
 }
 
-func NewAuthService1Repo(db *gorm.DB) AuthService1Repo {
+func NewAuthService1Repo(db *gorm.DB, redis *redis.Client) AuthService1Repo {
 	return &DefaultAuthService1Repo{
-		db: db,
+		db:    db,
+		redis: redis,
 	}
 }
 
@@ -78,4 +82,12 @@ func (r DefaultAuthService1Repo) LoginGRPC(request *proto.LoginRequest) (*proto.
 		return res, nil
 	}
 	return response, nil
+}
+
+func (r DefaultAuthService1Repo) Logout(request *proto.LogoutRequest) (*proto.LogoutResponse, error) {
+	err := r.redis.Set(request.Token, "logout", 0).Err()
+	if err != nil {
+		return &proto.LogoutResponse{Status: "false"}, err
+	}
+	return &proto.LogoutResponse{Status: "true"}, nil
 }

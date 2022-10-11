@@ -30,3 +30,11 @@ func (s *Server) LoginGPRC(ctx context.Context, request *proto.LoginRequest) (*p
 	response, err := s.repository.LoginGRPC(request)
 	return response, err
 }
+
+func (s *Server) Logout(ctx context.Context, request *proto.LogoutRequest) (*proto.LogoutResponse, error) {
+	res, err := s.repository.Logout(request)
+	if err != nil {
+		return &proto.LogoutResponse{Status: "false"}, err
+	}
+	return res, nil
+}

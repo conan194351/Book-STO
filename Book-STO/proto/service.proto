@@ -27,7 +27,16 @@ message LoginResponse {
     int64 ExpireAt = 4;
 }
 
+message LogoutRequest{
+    string Token = 1;
+}
+
+message LogoutResponse{
+    string status = 1;
+}
+
 service AddAuthorService {
     rpc FindBookByIdAuthor (FindBookByIdAuthorRequest) returns (BooksResponse);
     rpc LoginGPRC (LoginRequest) returns (LoginResponse);
+    rpc Logout(LogoutRequest) returns (LogoutResponse);
 }

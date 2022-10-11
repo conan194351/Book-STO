@@ -7,6 +7,7 @@ import (
 	"book-sto/model"
 	"database/sql"
 
+	"github.com/go-redis/redis"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -15,14 +16,16 @@ type AuthRepository interface {
 }
 
 type DefaultAuthRepository struct {
-	db *sql.DB
+	redis *redis.Client
+	db    *sql.DB
 }
 
-func NewAuthRepository(db *sql.DB) AuthRepository {
+func NewAuthRepository(db *sql.DB, redis *redis.Client) AuthRepository {
 
 	return DefaultAuthRepository{
 
-		db: db,
+		db:    db,
+		redis: redis,
 	}
 }
 
@@ -43,6 +46,7 @@ func (a DefaultAuthRepository) Login(req dto.LoginAuthorRequest) (dto.LoginAutho
 	}
 	response.Status = "False"
 	if username != "" {
+		a.redis.Del(username)
 		jwtToken, token, e := config.NewJWTToken(username)
 		if e != nil {
 			return response, e

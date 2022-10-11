@@ -3,13 +3,10 @@ package handlers
 import (
 	"book-sto/dto"
 	"book-sto/errs"
-	"book-sto/proto"
 	"book-sto/service"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"google.golang.org/grpc"
 )
 
 type AuthorHandler struct {
@@ -89,23 +86,5 @@ func (a AuthorHandler) ShowBookByAuthor() gin.HandlerFunc {
 		}
 
 		WriteRespon(ctx, http.StatusOK, res)
-	}
-}
-
-func FindBookByIdAuthor(conn *grpc.ClientConn) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		client := proto.NewAddAuthorServiceClient(conn)
-		a, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Parameter A"})
-			return
-		}
-
-		req := &proto.FindBookByIdAuthorRequest{IdAuthor: int64(a)}
-		if response, err := client.FindBookByIdAuthor(ctx, req); err == nil {
-			WriteRespon(ctx, http.StatusOK, response)
-		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
 	}
 }

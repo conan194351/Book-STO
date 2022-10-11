@@ -6,14 +6,17 @@ import (
 	"book-sto/errs"
 	"book-sto/handlers"
 	"book-sto/repository"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 )
 
 type JWTMiddleware struct {
-	repo repository.AuthorRepository
+	repo  repository.AuthorRepository
+	redis *redis.Client
 }
 
 func (m JWTMiddleware) Verify() gin.HandlerFunc {
@@ -35,6 +38,14 @@ func (m JWTMiddleware) Verify() gin.HandlerFunc {
 		}
 
 		username := claims["data"].(string)
+		val, err1 := m.redis.Get(username).Result()
+		if err1 != nil {
+			fmt.Println(err)
+		}
+		if val != "" {
+			handlers.WriteRespon(c, http.StatusOK, dto.NotPermissions())
+			return
+		}
 
 		user, err := m.repo.FindAuthorByUsername(username)
 		if err != nil {
@@ -43,14 +54,16 @@ func (m JWTMiddleware) Verify() gin.HandlerFunc {
 		}
 		if user == "false" {
 			handlers.WriteRespon(c, http.StatusOK, dto.NotPermissions())
+			return
 		}
 		c.Set("user", user)
 		c.Next()
 	}
 }
 
-func NewJWTMiddleware(repo repository.AuthorRepository) JWTMiddleware {
+func NewJWTMiddleware(repo repository.AuthorRepository, redis *redis.Client) JWTMiddleware {
 	return JWTMiddleware{
-		repo: repo,
+		repo:  repo,
+		redis: redis,
 	}
 }

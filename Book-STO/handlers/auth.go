@@ -3,12 +3,10 @@ package handlers
 import (
 	"book-sto/dto"
 	"book-sto/errs"
-	"book-sto/proto"
 	"book-sto/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"google.golang.org/grpc"
 )
 
 type AuthHandler struct {
@@ -46,26 +44,8 @@ func (a AuthHandler) LoginAuthor() gin.HandlerFunc {
 	}
 }
 
-func LoginGRPC(conn *grpc.ClientConn) gin.HandlerFunc {
+func (a AuthHandler) LogoutAuthor() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		client := proto.NewAddAuthorServiceClient(conn)
-		var author dto.LoginAuthorRequest
-		err := ctx.BindJSON(&author)
 
-		if err != nil {
-			WriteError(ctx, errs.ErrorReadRequestBody())
-			return
-		}
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Parameter Username Or Password"})
-			return
-		}
-
-		req := &proto.LoginRequest{Username: author.Username, Password: author.Password}
-		if response, err := client.LoginGPRC(ctx, req); err == nil {
-			WriteRespon(ctx, http.StatusOK, dto.LoginSuccess("author", response.Token))
-		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
 	}
 }

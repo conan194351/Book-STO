@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"service1/config"
+	"service1/redis"
 	"service1/service"
 )
 
@@ -13,5 +14,6 @@ func RunApp() {
 		fmt.Println(err)
 	}
 	config.InitDatabase()
+	redis.NewResdisClient()
 	service.StartService(listener)
 }

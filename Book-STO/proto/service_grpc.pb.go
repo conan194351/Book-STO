@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type AddAuthorServiceClient interface {
 	FindBookByIdAuthor(ctx context.Context, in *FindBookByIdAuthorRequest, opts ...grpc.CallOption) (*BooksResponse, error)
 	LoginGPRC(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 }
 
 type addAuthorServiceClient struct {
@@ -52,13 +53,22 @@ func (c *addAuthorServiceClient) LoginGPRC(ctx context.Context, in *LoginRequest
 	return out, nil
 }
 
+func (c *addAuthorServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error) {
+	out := new(LogoutResponse)
+	err := c.cc.Invoke(ctx, "/proto.AddAuthorService/Logout", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AddAuthorServiceServer is the server API for AddAuthorService service.
 // All implementations must embed UnimplementedAddAuthorServiceServer
 // for forward compatibility
 type AddAuthorServiceServer interface {
 	FindBookByIdAuthor(context.Context, *FindBookByIdAuthorRequest) (*BooksResponse, error)
 	LoginGPRC(context.Context, *LoginRequest) (*LoginResponse, error)
-	mustEmbedUnimplementedAddAuthorServiceServer()
+	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 }
 
 // UnimplementedAddAuthorServiceServer must be embedded to have forward compatible implementations.
@@ -70,6 +80,9 @@ func (UnimplementedAddAuthorServiceServer) FindBookByIdAuthor(context.Context, *
 }
 func (UnimplementedAddAuthorServiceServer) LoginGPRC(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoginGPRC not implemented")
+}
+func (UnimplementedAddAuthorServiceServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
 }
 func (UnimplementedAddAuthorServiceServer) mustEmbedUnimplementedAddAuthorServiceServer() {}
 
@@ -120,6 +133,24 @@ func _AddAuthorService_LoginGPRC_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AddAuthorService_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogoutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AddAuthorServiceServer).Logout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.AddAuthorService/Logout",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AddAuthorServiceServer).Logout(ctx, req.(*LogoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AddAuthorService_ServiceDesc is the grpc.ServiceDesc for AddAuthorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +165,10 @@ var AddAuthorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LoginGPRC",
 			Handler:    _AddAuthorService_LoginGPRC_Handler,
+		},
+		{
+			MethodName: "Logout",
+			Handler:    _AddAuthorService_Logout_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
